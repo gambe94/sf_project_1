@@ -34,7 +34,7 @@ jobs:
           cache-dependencies: 'true'
           install-dependencies: 'true'
           working-directory: '.'
-          plugins: '@salesforce/sfdx-scanner,@salesforce/plugin-packaging'
+          plugins: '@salesforce/sfdx-scanner,@salesforce/plugin-packaging,sfdx-git-delta'
       
       - name: 'Display environment info'
         run: |
