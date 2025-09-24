@@ -27,6 +27,7 @@ jobs:
       
       # Using the separate sf_ci_shared repository:
       - name: 'Setup Salesforce Environment'
+        id: setup-sf
         uses: gambe94/sf_ci_shared/.github/actions/setup-sf-env@main
         with:
           node-version: '18'
