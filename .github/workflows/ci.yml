@@ -35,13 +35,14 @@ jobs:
           cache-dependencies: 'true'
           install-dependencies: 'true'
           working-directory: '.'
-          plugins: '@salesforce/sfdx-scanner,@salesforce/plugin-packaging,sfdx-git-delta'
+          plugins: 'sfdx-git-delta'
       
       - name: 'Display environment info'
         run: |
           echo "Node.js version: ${{ steps.setup-sf.outputs.node-version }}"
           echo "SF CLI version: ${{ steps.setup-sf.outputs.sf-cli-version }}"
           echo "Plugins installed: ${{ steps.setup-sf.outputs.plugins-installed }}"
+          echo "Plugins failed: ${{ steps.setup-sf.outputs.plugins-failed }}"
           echo "Cache hit: ${{ steps.setup-sf.outputs.cache-hit }}"
       
       - name: 'Run ESLint'
