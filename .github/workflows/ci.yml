@@ -1,0 +1,74 @@
+name: 'Salesforce CI/CD Pipeline'
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: 'Validate Salesforce Code'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Checkout source code'
+        uses: actions/checkout@v4
+        
+      # Option 1: If sf_ci_shared is a separate repository, use this format:
+      # - name: 'Setup Salesforce Environment'
+      #   uses: your-org/sf_ci_shared/.github/actions/setup-sf-env@main
+      #   with:
+      #     node-version: '18'
+      #     sf-cli-version: 'latest'
+      #     cache-dependencies: 'true'
+      #     install-dependencies: 'true'
+      
+      # Option 2: If sf_ci_shared is in the same repository (monorepo), use this format:
+      - name: 'Setup Salesforce Environment'
+        uses: ./../sf_ci_shared/.github/actions/setup-sf-env
+        with:
+          node-version: '18'
+          sf-cli-version: 'latest'
+          cache-dependencies: 'true'
+          install-dependencies: 'true'
+          working-directory: '.'
+          plugins: '@salesforce/sfdx-scanner,@salesforce/plugin-packaging'
+      
+      - name: 'Display environment info'
+        run: |
+          echo "Node.js version: ${{ steps.setup-sf.outputs.node-version }}"
+          echo "SF CLI version: ${{ steps.setup-sf.outputs.sf-cli-version }}"
+          echo "Plugins installed: ${{ steps.setup-sf.outputs.plugins-installed }}"
+          echo "Cache hit: ${{ steps.setup-sf.outputs.cache-hit }}"
+      
+      - name: 'Run ESLint'
+        run: npm run lint
+        
+      - name: 'Run Jest Tests'
+        run: npm test
+        
+      - name: 'Validate Salesforce metadata'
+        run: |
+          sf org create scratch -f config/project-scratch-def.json -a validate-org --no-ancestors --duration-days 1
+          sf project deploy start --source-dir force-app --target-org validate-org --dry-run
+          sf org delete scratch --target-org validate-org --no-prompt
+
+  # Additional job for deployment (example)
+  deploy:
+    name: 'Deploy to Sandbox'
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+      - name: 'Checkout source code'
+        uses: actions/checkout@v4
+        
+      - name: 'Setup Salesforce Environment'
+        uses: ./../sf_ci_shared/.github/actions/setup-sf-env
+        with:
+          node-version: '18'
+          sf-cli-version: 'latest'
+          
